@@ -8,7 +8,7 @@ app.use(helmet());
 
  // Configure CORS for both development and production
 app.use(cors({
- origin: ['http://localhost:5173', "https://craftopia-frontend-owc4.vercel.app"],
+ origin: ['http://localhost:5173', "https://craftopia-frontend-owc4.vercel.app" ,"https://craftopia-frontend-owc4-n8au4pyai-salmaayman11s-projects.vercel.app/],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true           
