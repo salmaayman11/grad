@@ -6,26 +6,44 @@ const app = express();
 
 app.use(helmet());
 
- // Configure CORS for both development and production
+// Allowed origins for local and production frontends
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://craftopia-frontend-owc4.vercel.app',
+  'https://craftopia-frontend-owc4-n8au4pyai-salmaayman11s-projects.vercel.app'
+];
+
 app.use(cors({
- origin: ['http://localhost:5173', "https://craftopia-frontend-owc4.vercel.app" ,"https://craftopia-frontend-owc4-n8au4pyai-salmaayman11s-projects.vercel.app/],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error('CORS not allowed for this origin'), false);
+    }
+    return callback(null, true);
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true           
+  credentials: true
 }));
 
-
+// Handle preflight OPTIONS requests
+app.options('*', cors({
+  origin: allowedOrigins,
+  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization'],
+  credentials: true
+}));
 
 app.use(express.json({ limit: '2mb' }));
 
-// Health check route for Render
+// Health check route
 app.get('/', (req, res) => {
   res.status(200).json({ status: 'success', message: 'Craftopia API is running' });
-});    
+});
 
 // Routes
 const authRoute = require('./routes/authRoute');
-app.use('/auth', authRoute); 
+app.use('/auth', authRoute);
 
 const customerRoute = require('./routes/customerRoute');
 app.use('/customer', customerRoute);
@@ -41,7 +59,6 @@ app.use('/product', productRoute);
 
 const categoryRoute = require('./routes/categoryRoute');
 app.use('/category', categoryRoute);
-
 
 const customizationRequestRoute = require('./routes/customizationRequestRoute');
 app.use('/customizationRequest', customizationRequestRoute);
