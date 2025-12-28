@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const app = express();
 
 app.use(helmet());
+app.use(express.json({ limit: '2mb' }));
 
 // Allowed origins for local and production frontends
 const allowedOrigins = [
@@ -13,28 +14,23 @@ const allowedOrigins = [
   'https://craftopia-frontend-owc4-n8au4pyai-salmaayman11s-projects.vercel.app'
 ];
 
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      return callback(new Error('CORS not allowed for this origin'), false);
-    }
-    return callback(null, true);
-  },
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+// CORS middleware
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
 
-// Handle preflight OPTIONS requests
-app.options('*', cors({
-  origin: allowedOrigins,
-  methods: ['GET','POST','PUT','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization'],
-  credentials: true
-}));
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
 
-app.use(express.json({ limit: '2mb' }));
+  next();
+});
 
 // Health check route
 app.get('/', (req, res) => {
@@ -99,17 +95,20 @@ app.use('/trackSales', trackRoute);
 const reportRoute = require('./routes/reportRoute');
 app.use('/report', reportRoute);
 
-const { startAuctionScheduler } = require('./services/auctionScheduler');
-startAuctionScheduler();
-
 const cartRoute = require('./routes/cartRoute');
 app.use('/mycart', cartRoute);
 
+// Start auction scheduler
+const { startAuctionScheduler } = require('./services/auctionScheduler');
+startAuctionScheduler();
+
+// Start server
 const PORT = process.env.PORT || 3000;
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
 });
 
+// Initialize socket service
 const socketService = require('./services/socketService');
 socketService.initialize(server);
 
