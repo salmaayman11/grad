@@ -8,7 +8,7 @@ app.use(helmet());
 
  // Configure CORS for both development and production
 app.use(cors({
-  origin: 'http://localhost:5173',  
+  origin: ['http://localhost:5173', "https://craftopia-frontend-owc4.vercel.app"],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true           
@@ -21,7 +21,7 @@ app.use(express.json({ limit: '2mb' }));
 // Health check route for Render
 app.get('/', (req, res) => {
   res.status(200).json({ status: 'success', message: 'Craftopia API is running' });
-});
+});    
 
 // Routes
 const authRoute = require('./routes/authRoute');
